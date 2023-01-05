@@ -36,6 +36,9 @@ find_package(catkin REQUIRED COMPONENTS
   hdl_global_localization
 )
 
+find_package(catkin_simple)
+catkin_simple()
+
 find_package(PCL 1.7 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
@@ -54,10 +57,10 @@ endif()
 ########################
 ## message generation ##
 ########################
-add_message_files(FILES
-  ScanMatchingStatus.msg
-)
-generate_messages(DEPENDENCIES std_msgs geometry_msgs)
+#add_message_files(FILES
+#  ScanMatchingStatus.msg
+#)
+#generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 
 ###################################
 ## catkin specific configuration ##
@@ -78,9 +81,10 @@ include_directories(
 )
 
 # nodelets
-add_library(hdl_localization_nodelet
+cs_add_library(hdl_localization_nodelet
   src/hdl_localization/pose_estimator.cpp
   apps/hdl_localization_nodelet.cpp
+  apps/globalmap_server_nodelet.cpp
 )
 target_link_libraries(hdl_localization_nodelet
   ${catkin_LIBRARIES}
@@ -89,9 +93,22 @@ target_link_libraries(hdl_localization_nodelet
 add_dependencies(hdl_localization_nodelet ${PROJECT_NAME}_gencpp)
 
 
-add_library(globalmap_server_nodelet apps/globalmap_server_nodelet.cpp)
-target_link_libraries(globalmap_server_nodelet
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
+#cs_add_library(globalmap_server_nodelet apps/globalmap_server_nodelet.cpp)
+#target_link_libraries(globalmap_server_nodelet
+#  ${catkin_LIBRARIES}
+#  ${PCL_LIBRARIES}
+#)
+
+install(DIRECTORY launch/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+        )
+install(DIRECTORY data/
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/data
+        )
+install(
+        FILES nodelet_plugins.xml
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
+cs_install()
+cs_export()
