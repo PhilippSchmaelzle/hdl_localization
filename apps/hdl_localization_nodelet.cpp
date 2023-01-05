@@ -23,9 +23,9 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include <pclomp/ndt_omp.h>
-#include <fast_gicp/ndt/ndt_cuda.hpp
+#include <fast_gicp/ndt/ndt_cuda.hpp>
 #include <fast_gicp/gicp/fast_vgicp.hpp>
-#include <fast_gicp/gicp/fast_vgicp_cuda.hpp>>
+#include <fast_gicp/gicp/fast_vgicp_cuda.hpp>
 
 #include <hdl_localization/pose_estimator.hpp>
 #include <hdl_localization/delta_estimater.hpp>
