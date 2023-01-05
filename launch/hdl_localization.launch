@@ -47,6 +47,20 @@
       <!-- ndt settings -->
       <!-- available reg_methods: NDT_OMP, NDT_CUDA_P2D, NDT_CUDA_D2D-->
       <param name="reg_method" value="NDT_OMP" />
+      <!--NDT_OMP:                       DIRECT1, DIRECT7,  KDTREE,          [ndt_omp] -->
+      <!--NDT_CUDA_P2D, NDT_CUDA_D2D:    DIRECT1, DIRECT7,  DIRECT_RADIUS,   [fast_gicp::NDTCuda] -->
+
+      <!--FastVGICP_ADDITIVE_WEIGHTED, FastVGICP_MULTIPLICATIVE,  FastVGICP_ADDITIVE:
+                    DIRECT1, DIRECT7,  [fast_gicp::FastVGICP]-->
+
+      <!--FastVGICP_CUDA_PLANE, FastVGICP_CUDA_FROBENIUS,  FastVGICP_CUDA_MIN_EIG:
+                    DIRECT1, DIRECT7, DIRECT27, DIRECT_RADIUS
+                    CPU_PARALLEL_KDTREE, GPU_BRUTEFORCE, GPU_RBF_KERNEL  [fast_gicp::FastVGICPCuda]-->
+
+      <!-- 使用cuda版本的话, 在编译fast_gicp时, 需要-DBUILD_VGICP_CUDA=ON-->
+
+      <param name="fastvgicpCUDA_nearest_neighbor_search_method" value="GPU_RBF_KERNEL" /> <!--CPU_PARALLEL_KDTREE, GPU_BRUTEFORCE, GPU_RBF_KERNEL -->
+      <!-- if NDT is slow for your PC, try DIRECT1 serach method, which is a bit unstable but extremely fast -->
       <!-- if NDT is slow for your PC, try DIRECT1 serach method, which is a bit unstable but extremely fast -->
       <param name="ndt_neighbor_search_method" value="DIRECT7" />
       <param name="ndt_neighbor_search_radius" value="2.0" />

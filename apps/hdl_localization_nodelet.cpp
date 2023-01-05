@@ -23,7 +23,9 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include <pclomp/ndt_omp.h>
-#include <fast_gicp/ndt/ndt_cuda.hpp>
+#include <fast_gicp/ndt/ndt_cuda.hpp
+#include <fast_gicp/gicp/fast_vgicp.hpp>
+#include <fast_gicp/gicp/fast_vgicp_cuda.hpp>>
 
 #include <hdl_localization/pose_estimator.hpp>
 #include <hdl_localization/delta_estimater.hpp>
@@ -88,6 +90,7 @@ private:
     std::string ndt_neighbor_search_method = private_nh.param<std::string>("ndt_neighbor_search_method", "DIRECT7");
     double ndt_neighbor_search_radius = private_nh.param<double>("ndt_neighbor_search_radius", 2.0);
     double ndt_resolution = private_nh.param<double>("ndt_resolution", 1.0);
+    std::string fastvgicpCUDA_nearest_neighbor_search_method = private_nh.param<std::string>("fastvgicpCUDA_nearest_neighbor_search_method", "CPU_PARALLEL_KDTREE");
 
     if(reg_method == "NDT_OMP") {
       NODELET_INFO("NDT_OMP is selected");
@@ -134,6 +137,69 @@ private:
         NODELET_WARN("invalid search method was given");
       }
       return ndt;
+    }
+    else if(reg_method.find("FastVGICP") != std::string::npos){
+      NODELET_INFO("FastVGICP is selected");
+      boost::shared_ptr<fast_gicp::FastVGICP<PointT, PointT>> fastvgicp(new fast_gicp::FastVGICP<PointT, PointT>);
+      fastvgicp->setResolution(ndt_resolution);
+
+      if(reg_method.find("ADDITIVE_WEIGHTED") != std::string::npos) {
+        fastvgicp->setVoxelAccumulationMode(fast_gicp::VoxelAccumulationMode::ADDITIVE_WEIGHTED);
+      }else if(reg_method.find("MULTIPLICATIVE") != std::string::npos){
+        fastvgicp->setVoxelAccumulationMode(fast_gicp::VoxelAccumulationMode::MULTIPLICATIVE);
+      }else if(reg_method.find("ADDITIVE") != std::string::npos){
+        fastvgicp->setVoxelAccumulationMode(fast_gicp::VoxelAccumulationMode::ADDITIVE);
+      }
+
+      if (ndt_neighbor_search_method == "DIRECT1") {//见fast_vgicp_impl.hpp
+        NODELET_INFO("search_method DIRECT1 is selected");
+        fastvgicp->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT1);
+      } else if (ndt_neighbor_search_method == "DIRECT7") {
+        NODELET_INFO("search_method DIRECT7 is selected");
+        fastvgicp->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7);
+      } else {
+        NODELET_WARN("invalid search method was given");
+      }
+      return fastvgicp;
+     }
+     else if(reg_method.find("FastVGICP_CUDA") != std::string::npos){
+       NODELET_INFO("FastVGICP_CUDA is selected");
+       boost::shared_ptr<fast_gicp::FastVGICPCuda<PointT, PointT>> fastvgicpCUDA(new fast_gicp::FastVGICPCuda<PointT, PointT>);
+       fastvgicpCUDA->setResolution(ndt_resolution);
+
+       if(reg_method.find("PLANE") != std::string::npos) { //见fast_vgicp_cuda_impl.hpp
+         fastvgicpCUDA->setRegularizationMethod(fast_gicp::RegularizationMethod::PLANE);
+       }else if(reg_method.find("FROBENIUS") != std::string::npos){
+         fastvgicpCUDA->setRegularizationMethod(fast_gicp::RegularizationMethod::FROBENIUS);
+       }else if(reg_method.find("MIN_EIG") != std::string::npos){
+         fastvgicpCUDA->setRegularizationMethod(fast_gicp::RegularizationMethod::MIN_EIG);
+       }
+
+       if (ndt_neighbor_search_method == "DIRECT1") {
+         NODELET_INFO("search_method DIRECT1 is selected");
+         fastvgicpCUDA->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT1, -1.0);
+       }else if (ndt_neighbor_search_method == "DIRECT7") {
+         NODELET_INFO("search_method DIRECT7 is selected");
+         fastvgicpCUDA->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT7, -1.0);
+       }else if(ndt_neighbor_search_method == "DIRECT27"){
+         NODELET_INFO("search_method DIRECT27 is selected");
+         fastvgicpCUDA->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT27, -1.0);
+       }else if(ndt_neighbor_search_method == "DIRECT_RADIUS"){
+         NODELET_INFO("search_method DIRECT_RADIUS is selected");
+         fastvgicpCUDA->setNeighborSearchMethod(fast_gicp::NeighborSearchMethod::DIRECT_RADIUS, -1.0);
+       }
+
+       if(fastvgicpCUDA_nearest_neighbor_search_method == "CPU_PARALLEL_KDTREE"){
+         NODELET_INFO("covariance CPU_PARALLEL_KDTREE is selected");
+         fastvgicpCUDA->setNearestNeighborSearchMethod(fast_gicp::NearestNeighborMethod::CPU_PARALLEL_KDTREE);
+       }else if(fastvgicpCUDA_nearest_neighbor_search_method == "GPU_BRUTEFORCE"){
+         NODELET_INFO("covariance GPU_BRUTEFORCE is selected");
+         fastvgicpCUDA->setNearestNeighborSearchMethod(fast_gicp::NearestNeighborMethod::GPU_BRUTEFORCE);
+       }else if(fastvgicpCUDA_nearest_neighbor_search_method == "GPU_RBF_KERNEL"){
+         NODELET_INFO("covariance GPU_RBF_KERNEL is selected");
+         fastvgicpCUDA->setNearestNeighborSearchMethod(fast_gicp::NearestNeighborMethod::GPU_RBF_KERNEL);
+       }
+       return fastvgicpCUDA;
     }
 
     NODELET_ERROR_STREAM("unknown registration method:" << reg_method);
