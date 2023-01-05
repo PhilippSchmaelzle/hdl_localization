@@ -43,9 +43,11 @@ private:
   void initialize_params() {
     // read globalmap from a pcd file
     std::string globalmap_pcd = private_nh.param<std::string>("globalmap_pcd", "");
+    lidar_map_frame_id = private_nh.param<std::string>("lidar_map_frame_id", "map");
+
     globalmap.reset(new pcl::PointCloud<PointT>());
     pcl::io::loadPCDFile(globalmap_pcd, *globalmap);
-    globalmap->header.frame_id = "map";
+    globalmap->header.frame_id = lidar_map_frame_id;
 
     std::ifstream utm_file(globalmap_pcd + ".utm");
     if (utm_file.is_open() && private_nh.param<bool>("convert_utm_to_local", true)) {
@@ -81,7 +83,7 @@ private:
     std::string globalmap_pcd = msg.data;
     globalmap.reset(new pcl::PointCloud<PointT>());
     pcl::io::loadPCDFile(globalmap_pcd, *globalmap);
-    globalmap->header.frame_id = "map";
+    globalmap->header.frame_id = lidar_map_frame_id;
 
     // downsample globalmap
     double downsample_resolution = private_nh.param<double>("downsample_resolution", 0.1);
@@ -107,6 +109,8 @@ private:
 
   ros::WallTimer globalmap_pub_timer;
   pcl::PointCloud<PointT>::Ptr globalmap;
+
+  std::string lidar_map_frame_id;
 };
 
 }

@@ -54,6 +54,8 @@ public:
 
     robot_odom_frame_id = private_nh.param<std::string>("robot_odom_frame_id", "robot_odom");
     odom_child_frame_id = private_nh.param<std::string>("odom_child_frame_id", "base_link");
+    lidar_map_frame_id = private_nh.param<std::string>("lidar_map_frame_id", "map");
+    lidar_odom_child_frame_id = private_nh.param<std::string>("lidar_odom_child_frame_id", "lidar_odom");
 
     use_imu = private_nh.param<bool>("use_imu", true);
     invert_acc = private_nh.param<bool>("invert_acc", false);
@@ -333,7 +335,7 @@ private:
     auto aligned = pose_estimator->correct(stamp, filtered);
 
     if(aligned_pub.getNumSubscribers()) {
-      aligned->header.frame_id = "map";
+      aligned->header.frame_id = lidar_map_frame_id;
       aligned->header.stamp = cloud->header.stamp;
       aligned_pub.publish(aligned);
     }
@@ -464,11 +466,12 @@ private:
    */
   void publish_odometry(const ros::Time& stamp, const Eigen::Matrix4f& pose) {
     // broadcast the transform over tf
-    if(tf_buffer.canTransform(robot_odom_frame_id, odom_child_frame_id, ros::Time(0))) {
+    // deactivate for DLR use as or TF-Tree provides map->odom->base_link already
+    if(false and (tf_buffer.canTransform(robot_odom_frame_id, odom_child_frame_id, ros::Time(0)))) {
       geometry_msgs::TransformStamped map_wrt_frame = tf2::eigenToTransform(Eigen::Isometry3d(pose.inverse().cast<double>()));
       map_wrt_frame.header.stamp = stamp;
       map_wrt_frame.header.frame_id = odom_child_frame_id;
-      map_wrt_frame.child_frame_id = "map";
+      map_wrt_frame.child_frame_id = lidar_map_frame_id;
 
       geometry_msgs::TransformStamped frame_wrt_odom = tf_buffer.lookupTransform(robot_odom_frame_id, odom_child_frame_id, ros::Time(0), ros::Duration(0.1));
       Eigen::Matrix4f frame2odom = tf2::transformToEigen(frame_wrt_odom).cast<float>().matrix();
@@ -483,22 +486,22 @@ private:
       geometry_msgs::TransformStamped odom_trans;
       odom_trans.transform = tf2::toMsg(odom_wrt_map);
       odom_trans.header.stamp = stamp;
-      odom_trans.header.frame_id = "map";
+      odom_trans.header.frame_id = lidar_map_frame_id;
       odom_trans.child_frame_id = robot_odom_frame_id;
 
       tf_broadcaster.sendTransform(odom_trans);
     } else {
       geometry_msgs::TransformStamped odom_trans = tf2::eigenToTransform(Eigen::Isometry3d(pose.cast<double>()));
       odom_trans.header.stamp = stamp;
-      odom_trans.header.frame_id = "map";
-      odom_trans.child_frame_id = odom_child_frame_id;
+      odom_trans.header.frame_id = lidar_map_frame_id;
+      odom_trans.child_frame_id = lidar_odom_child_frame_id;
       tf_broadcaster.sendTransform(odom_trans);
     }
 
     // publish the transform
     nav_msgs::Odometry odom;
     odom.header.stamp = stamp;
-    odom.header.frame_id = "map";
+    odom.header.frame_id = lidar_map_frame_id;
 
     tf::poseEigenToMsg(Eigen::Isometry3d(pose.cast<double>()), odom.pose.pose);
     odom.child_frame_id = odom_child_frame_id;
@@ -568,6 +571,8 @@ private:
 
   std::string robot_odom_frame_id;
   std::string odom_child_frame_id;
+  std::string lidar_map_frame_id;
+  std::string lidar_odom_child_frame_id;
 
   bool use_imu;
   bool invert_acc;
