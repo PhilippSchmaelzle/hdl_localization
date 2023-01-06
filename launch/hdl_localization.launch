@@ -30,6 +30,9 @@
       <param name="downsample_resolution" value="0.1" />
     </node>
 
+    <arg name="umt_frame_id" default="utm"/>
+    <node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="606380.820 5797287.573 129.5 0.0213 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />
+
     <!-- hdl_localization_nodelet -->
     <node pkg="nodelet" type="nodelet" name="hdl_localization_nodelet" args="load hdl_localization/HdlLocalizationNodelet $(arg nodelet_manager)">
       <remap from="/velodyne_points" to="$(arg points_topic)" />
