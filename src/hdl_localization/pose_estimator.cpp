@@ -15,8 +15,8 @@ namespace hdl_localization {
  * @param quat                initial orientation
  * @param cool_time_duration  during "cool time", prediction is not performed
  */
-PoseEstimator::PoseEstimator(pcl::Registration<PointT, PointT>::Ptr& registration, const ros::Time& stamp, const Eigen::Vector3f& pos, const Eigen::Quaternionf& quat, double cool_time_duration)
-    : init_stamp(stamp), registration(registration), cool_time_duration(cool_time_duration) {
+PoseEstimator::PoseEstimator(pcl::Registration<PointT, PointT>::Ptr& registration, const ros::Time& stamp, const Eigen::Vector3f& pos, const Eigen::Quaternionf& quat, double cool_time_duration, bool trust_odom)
+    : init_stamp(stamp), registration(registration), cool_time_duration(cool_time_duration), trust_odom(trust_odom) {
   last_observation = Eigen::Matrix4f::Identity();
   last_observation.block<3, 3>(0, 0) = quat.toRotationMatrix();
   last_observation.block<3, 1>(0, 3) = pos;
@@ -172,6 +172,19 @@ pcl::PointCloud<PoseEstimator::PointT>::Ptr PoseEstimator::correct(const ros::Ti
 
     init_guess.block<3, 1>(0, 3) = Eigen::Vector3f(fused_mean[0], fused_mean[1], fused_mean[2]);
     init_guess.block<3, 3>(0, 0) = Eigen::Quaternionf(fused_mean[3], fused_mean[4], fused_mean[5], fused_mean[6]).normalized().toRotationMatrix();
+
+    /**
+     * Philipp Schmälzle 06.01.2023
+     * If one has a highly trustworthy odometry it can improve the stability of the registration process.
+     * e.g. If you trigger a relocalization while the ego vehicle is driving, it can leave the search radius of the registration faster
+     * than the prediction converges to a forecast which is far enough.
+     * Than it can happen, that the registration will not find any solution.
+     *
+     * If on the other hand the odometry is nearly perfect, it is by far the best source for an initial guess.
+     */
+    if( trust_odom ){
+        init_guess.block<4, 4>(0, 0) = odom_guess.block<4,4>(0,0);
+    }
   }
 
   pcl::PointCloud<PointT>::Ptr aligned(new pcl::PointCloud<PointT>());

@@ -230,7 +230,8 @@ private:
         ros::Time::now(),
         Eigen::Vector3f(private_nh.param<double>("init_pos_x", 0.0), private_nh.param<double>("init_pos_y", 0.0), private_nh.param<double>("init_pos_z", 0.0)),
         Eigen::Quaternionf(private_nh.param<double>("init_ori_w", 1.0), private_nh.param<double>("init_ori_x", 0.0), private_nh.param<double>("init_ori_y", 0.0), private_nh.param<double>("init_ori_z", 0.0)),
-        private_nh.param<double>("cool_time_duration", 0.5)
+        private_nh.param<double>("cool_time_duration", 0.5),
+          private_nh.param<bool>("trust_odom", false)
       ));
     }
   }
@@ -415,7 +416,8 @@ private:
       ros::Time::now(),
       pose.translation(),
       Eigen::Quaternionf(pose.linear()),
-      private_nh.param<double>("cool_time_duration", 0.5)));
+      private_nh.param<double>("cool_time_duration", 0.5),
+      private_nh.param<bool>("trust_odom", false)));
 
     relocalizing = false;
 
@@ -437,7 +439,8 @@ private:
             ros::Time::now(),
             Eigen::Vector3f(p.x, p.y, p.z),
             Eigen::Quaternionf(q.w, q.x, q.y, q.z),
-            private_nh.param<double>("cool_time_duration", 0.5))
+            private_nh.param<double>("cool_time_duration", 0.5),
+            private_nh.param<bool>("trust_odom", false))
     );
   }
 
