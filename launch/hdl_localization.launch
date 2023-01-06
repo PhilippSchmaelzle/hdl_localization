@@ -7,6 +7,7 @@
   <!-- this is useful to match the LIDAR and IMU coodinate systems -->
   <arg name="odom_child_frame_id" default="base_link" />
   <arg name="lidar_map_frame_id" default="lidar_map" />
+  <arg name="utm_frame_id" default="utm"/>
 
   <!-- optional arguments -->
   <arg name="use_imu" default="false" />
@@ -31,7 +32,6 @@
       <param name="downsample_resolution" value="0.1" />
     </node>
 
-    <arg name="umt_frame_id" default="utm"/>
     <node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="606380.820 5797287.573 129.5 0.0213 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />
 
     <!-- hdl_localization_nodelet -->
