@@ -68,9 +68,9 @@ public:
     globalmap_sub = nh.subscribe("/globalmap", 1, &HdlLocalizationNodelet::globalmap_callback, this);
     initialpose_sub = nh.subscribe("/initialpose", 8, &HdlLocalizationNodelet::initialpose_callback, this);
 
-    pose_pub = nh.advertise<nav_msgs::Odometry>("/odom", 5, false);
+    pose_pub = nh.advertise<nav_msgs::Odometry>("odom", 5, false);
     aligned_pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_points", 5, false);
-    status_pub = nh.advertise<ScanMatchingStatus>("/status", 5, false);
+    status_pub = nh.advertise<ScanMatchingStatus>("status", 5, false);
 
     // global localization
     use_global_localization = private_nh.param<bool>("use_global_localization", true);
