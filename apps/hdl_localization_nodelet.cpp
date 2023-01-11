@@ -527,6 +527,8 @@ private:
 
     const double max_correspondence_dist = 0.5;
 
+    //TODO: Clean activation with parameter
+    /*
     int num_inliers = 0;
     std::vector<int> k_indices;
     std::vector<float> k_sq_dists;
@@ -538,6 +540,7 @@ private:
       }
     }
     status.inlier_fraction = static_cast<float>(num_inliers) / aligned->size();
+     */
     status.relative_pose = tf2::eigenToTransform(Eigen::Isometry3d(registration->getFinalTransformation().cast<double>())).transform;
 
     status.prediction_labels.reserve(2);
