@@ -68,6 +68,8 @@ public:
     globalmap_sub = nh.subscribe("/globalmap", 1, &HdlLocalizationNodelet::globalmap_callback, this);
     initialpose_sub = nh.subscribe("/initialpose", 8, &HdlLocalizationNodelet::initialpose_callback, this);
 
+    initial_pose_ = false;
+
     pose_pub = nh.advertise<nav_msgs::Odometry>("odom", 5, false);
     aligned_pub = nh.advertise<sensor_msgs::PointCloud2>("/aligned_points", 5, false);
     status_pub = nh.advertise<ScanMatchingStatus>("status", 5, false);
@@ -262,6 +264,11 @@ private:
       return;
     }
 
+    if(!initial_pose_){
+      NODELET_INFO_THROTTLE(1, "initial_pose not received!!");
+      return;
+    }
+
     const auto& stamp = points_msg->header.stamp;
     pcl::PointCloud<PointT>::Ptr pcl_cloud(new pcl::PointCloud<PointT>());
     pcl::fromROSMsg(*points_msg, *pcl_cloud);
@@ -382,6 +389,7 @@ private:
       NODELET_INFO_STREAM("no scan has been received");
       return false;
     }
+    initial_pose_ = true;
 
     relocalizing = true;
     delta_estimater->reset();
@@ -430,6 +438,7 @@ private:
    */
   void initialpose_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& pose_msg) {
     NODELET_INFO("initial pose received!!");
+    initial_pose_ = true;
     std::lock_guard<std::mutex> lock(pose_estimator_mutex);
     const auto& p = pose_msg->pose.pose.position;
     const auto& q = pose_msg->pose.pose.orientation;
@@ -618,6 +627,8 @@ private:
   ros::ServiceServer relocalize_server;
   ros::ServiceClient set_global_map_service;
   ros::ServiceClient query_global_localization_service;
+
+  bool initial_pose_;
 };
 }
 
