@@ -28,12 +28,13 @@
     <!-- globalmap_server_nodelet -->
     <node pkg="nodelet" type="nodelet" name="globalmap_server_nodelet" args="load hdl_localization/GlobalmapServerNodelet $(arg nodelet_manager)">
       <param name="globalmap_pcd" value="$(find hdl_localization)/data/map.pcd" />
-      <param name="convert_utm_to_local" value="true" />
+      <param name="convert_utm_to_local" value="false" />
       <param name="downsample_resolution" value="0.2" />
       <param name="lidar_map_frame_id" value="$(arg lidar_map_frame_id)" />
+      <param name="utm_frame_id" value="$(arg utm_frame_id)"/>
     </node>
 
-    <node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="606380.820 5797287.573 129.5 0.0213 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />
+    <!--<node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="606380.820 5797287.573 129.5 0.0213 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />-->
     <!-- map_rotated_utm -->
     <!--<node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="605300.0 5794200.0 129.5 0.0 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />-->
 

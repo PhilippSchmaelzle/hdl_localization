@@ -5,6 +5,8 @@
 #include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
 #include <tf/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 #include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -44,17 +46,56 @@ private:
     // read globalmap from a pcd file
     std::string globalmap_pcd = private_nh.param<std::string>("globalmap_pcd", "");
     lidar_map_frame_id = private_nh.param<std::string>("lidar_map_frame_id", "map");
+    utm_frame_id = private_nh.param<std::string>("utm_frame_id", "utm");
 
     globalmap.reset(new pcl::PointCloud<PointT>());
     pcl::io::loadPCDFile(globalmap_pcd, *globalmap);
     globalmap->header.frame_id = lidar_map_frame_id;
 
     std::ifstream utm_file(globalmap_pcd + ".utm");
+
+    if (utm_file.is_open()) {
+      double utm_easting;
+      double utm_northing;
+      double altitude;
+      double roll;
+      double pitch;
+      double yaw;
+      utm_file >> utm_easting >> utm_northing >> altitude;
+
+      tf2::Quaternion map_orientation_q;
+      map_orientation_q.setRPY(roll, pitch, yaw);
+      map_orientation_q.normalize();
+
+      geometry_msgs::TransformStamped  stamped_transform;
+      stamped_transform.header.frame_id = utm_frame_id;
+      stamped_transform.header.stamp = ros::Time::now();
+      stamped_transform.child_frame_id = lidar_map_frame_id;
+
+      stamped_transform.transform.translation.x = utm_easting;
+      stamped_transform.transform.translation.y = utm_northing;
+      stamped_transform.transform.translation.z = altitude;
+
+      stamped_transform.transform.rotation.x = map_orientation_q.getX();
+      stamped_transform.transform.rotation.y = map_orientation_q.getY();
+      stamped_transform.transform.rotation.z = map_orientation_q.getZ();
+      stamped_transform.transform.rotation.w = map_orientation_q.getW();
+
+      tf2_static_broad.sendTransform(stamped_transform);
+
+      ROS_INFO("Transformation %s to %s provided!\nx: %f\ny: %f\nz: %f\np: %f\nr: %f\ny: %f", utm_frame_id.c_str(), lidar_map_frame_id.c_str(), utm_easting, utm_northing, altitude, roll, pitch, yaw);
+    }
+    else{
+      ROS_ERROR_STREAM("No transformation " << utm_frame_id << " to " << lidar_map_frame_id << "provided! Please create " << globalmap_pcd << ".utm file with x y z r p y Values!");
+    }
+
+
     if (utm_file.is_open() && private_nh.param<bool>("convert_utm_to_local", true)) {
       double utm_easting;
       double utm_northing;
       double altitude;
       utm_file >> utm_easting >> utm_northing >> altitude;
+
       for(auto& pt : globalmap->points) {
         pt.getVector3fMap() -= Eigen::Vector3f(utm_easting, utm_northing, altitude);
       }
@@ -94,6 +135,44 @@ private:
     pcl::PointCloud<PointT>::Ptr filtered(new pcl::PointCloud<PointT>());
     voxelgrid->filter(*filtered);
 
+    std::ifstream utm_file(globalmap_pcd + ".utm");
+
+    if (utm_file.is_open()) {
+      double utm_easting;
+      double utm_northing;
+      double altitude;
+      double roll;
+      double pitch;
+      double yaw;
+      utm_file >> utm_easting >> utm_northing >> altitude;
+
+      tf2::Quaternion map_orientation_q;
+      map_orientation_q.setRPY(roll, pitch, yaw);
+      map_orientation_q.normalize();
+
+      geometry_msgs::TransformStamped  stamped_transform;
+      stamped_transform.header.frame_id = utm_frame_id;
+      stamped_transform.header.stamp = ros::Time::now();
+      stamped_transform.child_frame_id = lidar_map_frame_id;
+
+      stamped_transform.transform.translation.x = utm_easting;
+      stamped_transform.transform.translation.y = utm_northing;
+      stamped_transform.transform.translation.z = altitude;
+
+      stamped_transform.transform.rotation.x = map_orientation_q.getX();
+      stamped_transform.transform.rotation.y = map_orientation_q.getY();
+      stamped_transform.transform.rotation.z = map_orientation_q.getZ();
+      stamped_transform.transform.rotation.w = map_orientation_q.getW();
+
+      tf2_static_broad.sendTransform(stamped_transform);
+
+      ROS_INFO("Transformation %s to %s provided!\nx: %f\ny: %f\nz: %f\np: %f\nr: %f\ny: %f", utm_frame_id.c_str(), lidar_map_frame_id.c_str(), utm_easting, utm_northing, altitude, roll, pitch, yaw);
+    }
+    else{
+      ROS_ERROR_STREAM("No transformation " << utm_frame_id << " to " << lidar_map_frame_id << "provided! Please create " << globalmap_pcd << ".utm file with x y z r p y Values!");
+    }
+
+
     globalmap = filtered;
     globalmap_pub.publish(globalmap);
   }
@@ -111,6 +190,8 @@ private:
   pcl::PointCloud<PointT>::Ptr globalmap;
 
   std::string lidar_map_frame_id;
+  std::string utm_frame_id;
+  tf2_ros::StaticTransformBroadcaster tf2_static_broad;
 };
 
 }
