@@ -61,7 +61,7 @@ private:
       double roll;
       double pitch;
       double yaw;
-      utm_file >> utm_easting >> utm_northing >> altitude;
+      utm_file >> utm_easting >> utm_northing >> altitude >> yaw >> pitch >> roll;
 
       tf2::Quaternion map_orientation_q;
       map_orientation_q.setRPY(roll, pitch, yaw);
