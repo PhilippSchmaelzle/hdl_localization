@@ -83,7 +83,7 @@ private:
 
       tf2_static_broad.sendTransform(stamped_transform);
 
-      ROS_INFO("Transformation %s to %s provided!\nx: %f\ny: %f\nz: %f\np: %f\nr: %f\ny: %f", utm_frame_id.c_str(), lidar_map_frame_id.c_str(), utm_easting, utm_northing, altitude, roll, pitch, yaw);
+      ROS_INFO("Transformation %s to %s provided!\nx: %f\ny: %f\nz: %f\ny: %f\np: %f\nr: %f", utm_frame_id.c_str(), lidar_map_frame_id.c_str(), utm_easting, utm_northing, altitude, yaw, pitch, roll);
     }
     else{
       ROS_ERROR_STREAM("No transformation " << utm_frame_id << " to " << lidar_map_frame_id << "provided! Please create " << globalmap_pcd << ".utm file with x y z r p y Values!");
