@@ -385,11 +385,14 @@ private:
    * @param
    */
   bool relocalize(std_srvs::EmptyRequest& req, std_srvs::EmptyResponse& res) {
+      initial_pose_ = true;
+      // sleep for short time to receive a point cloud
+      ros::Duration(0.2).sleep();
     if(last_scan == nullptr) {
       NODELET_INFO_STREAM("no scan has been received");
       return false;
     }
-    initial_pose_ = true;
+    initial_pose_ = false;
 
     relocalizing = true;
     delta_estimater->reset();
@@ -428,6 +431,7 @@ private:
       private_nh.param<bool>("trust_odom", false)));
 
     relocalizing = false;
+    initial_pose_ = true;
 
     return true;
   }
