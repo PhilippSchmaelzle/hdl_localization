@@ -32,6 +32,7 @@
       <param name="downsample_resolution" value="0.2" />
       <param name="lidar_map_frame_id" value="$(arg lidar_map_frame_id)" />
       <param name="utm_frame_id" value="$(arg utm_frame_id)"/>
+      <remap from="/globalmap" to="globalmap"/>
     </node>
 
     <!--<node pkg="tf" type="static_transform_publisher" name="lidar_map_to_utm_transform" args="606380.820 5797287.573 129.5 0.0213 0 0 $(arg utm_frame_id) $(arg lidar_map_frame_id) 1000" />-->
@@ -43,6 +44,8 @@
     <node pkg="nodelet" type="nodelet" name="hdl_localization_nodelet" args="load hdl_localization/HdlLocalizationNodelet $(arg nodelet_manager)">
       <remap from="/velodyne_points" to="$(arg points_topic)" />
       <remap from="/gpsimu_driver/imu_data" to="$(arg imu_topic)" />
+      <remap from="/globalmap" to="globalmap"/>
+      <remap from="/aligned_points" to="aligned_points"/>
       <!-- odometry frame_id -->
       <param name="odom_child_frame_id" value="$(arg odom_child_frame_id)" />
       <param name="lidar_map_frame_id" value="$(arg lidar_map_frame_id)" />
